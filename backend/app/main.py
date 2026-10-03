@@ -56,21 +56,26 @@ async def root():
 
 
 @app.get("/health", tags=["General"])
+@app.get("/api/health", tags=["General"])
 async def health_check():
     provider = os.getenv("LLM_PROVIDER", "gemini")
     has_gemini = bool(os.getenv("GEMINI_API_KEY") and os.getenv("GEMINI_API_KEY") != "your_gemini_api_key_here")
     has_openai = bool(os.getenv("OPENAI_API_KEY") and os.getenv("OPENAI_API_KEY") != "your_openai_api_key_here")
     has_groq = bool(os.getenv("GROQ_API_KEY") and os.getenv("GROQ_API_KEY") != "your_groq_api_key_here")
+    is_live = has_gemini or has_openai or has_groq
 
     return {
-        "status": "healthy",
+        "status": "online",
+        "version": "1.0.0",
         "configured_provider": provider,
+        "llm_configured": is_live,
+        "active_provider": f"{provider.capitalize()} Engine" if is_live else "Offline Heuristic Engine",
         "keys_configured": {
             "gemini": has_gemini,
             "openai": has_openai,
             "groq": has_groq,
         },
-        "mode": "live_llm" if (has_gemini or has_openai or has_groq) else "heuristic_fallback"
+        "mode": "live_llm" if is_live else "heuristic_fallback"
     }
 
 
